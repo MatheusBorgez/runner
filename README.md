@@ -6,6 +6,7 @@ Especificação do trabalho prático da disciplina Implementação e Integraçã
 - [Design](design.md)
 - [Plano de implementação](docs/plano-revisitado-v2.md)
 - [Sprint 1](./docs/sprint-1-tasks.md)
+- [Critérios de aceitação](./docs/criterios.md) Critérios a serem observados para considerar o trabalho como "pronto".
 
 # O que está acontecendo... 
 
