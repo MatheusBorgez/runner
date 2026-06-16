@@ -165,10 +165,17 @@ if (($userPath -split ';') -notcontains $BinDir) {
 # ----------------------------------------------------------------------------
 # Verificação final (não fatal)
 # ----------------------------------------------------------------------------
+# Observação: a invocação de um .exe NÃO lança exceção em exit-code != 0
+# (apenas falhas de execução, ex.: arquivo ausente). Por isso inspecionamos
+# $LASTEXITCODE explicitamente, além do try/catch.
 try {
   & (Join-Path $BinDir $BinName) version *> $null
-  Write-Ok "hubsaude $resolvedVersion instalado com sucesso. Experimente: hubsaude --help"
+  if ($LASTEXITCODE -eq 0) {
+    Write-Ok "hubsaude $resolvedVersion instalado com sucesso. Experimente: hubsaude --help"
+  } else {
+    Write-Warn "Binário instalado em $dest, mas 'hubsaude version' retornou código $LASTEXITCODE."
+  }
 }
 catch {
-  Write-Warn "Binário instalado, mas a verificação de execução não retornou sucesso."
+  Write-Warn "Binário instalado em $dest, mas a verificação de execução falhou: $($_.Exception.Message)"
 }
