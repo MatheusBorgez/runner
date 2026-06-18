@@ -1,9 +1,9 @@
 {
   "validador": {
-    "url": "https://github.com/kyriosdata/runner/releases/download/hubsaude-validador-api-v0.1.10/hubsaude-validador-api-0.1.10-exec.jar",
-    "version": "0.1.10",
-    "tag": "hubsaude-validador-api-v0.1.10",
-    "sha256": "87de5e205b2811150fceb82c2206c51ceac40838ced29c4c07eccc720b9ea37e"
+    "url": "https://github.com/kyriosdata/runner/releases/download/hubsaude-validador-ui-v0.1.9/hubsaude-validador-ui-0.1.9-exec.jar",
+    "version": "0.1.9",
+    "tag": "hubsaude-validador-ui-v0.1.9",
+    "sha256": "a73aed28e97e5bcd6cc793cbdf5f84265827549251a8a84cd7568b694aaf8c51"
   },
   "simulador": {
     "url": "https://github.com/kyriosdata/runner/releases/download/hubsaude-simulador-v0.1.7/hubsaude-simulador-0.1.7.jar",
