@@ -69,13 +69,12 @@ func TestJarPath(t *testing.T) {
 // stateManagerWithDir cria um StateManager usando um diretório temporário.
 func stateManagerWithDir(t *testing.T, dir string) *runtime.StateManager {
 	t.Helper()
-	// Cria manager apontando para dir injetando via hack de subdiretório
-	// (StateManager usa os.UserHomeDir, então fazemos override via env HOME)
+	// os.UserHomeDir usa HOME no Unix e USERPROFILE no Windows
 	t.Setenv("HOME", dir)
+	t.Setenv("USERPROFILE", dir)
 	sm, err := runtime.NewStateManager()
 	if err != nil {
 		t.Fatalf("NewStateManager falhou: %v", err)
 	}
-	_ = os.MkdirAll(filepath.Join(dir, ".hubsaude"), 0o750)
 	return sm
 }
