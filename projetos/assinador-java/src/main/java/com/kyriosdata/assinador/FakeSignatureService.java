@@ -66,8 +66,6 @@ public class FakeSignatureService implements SignatureService {
         }
         if (isBlank(request.getSignature())) {
             errors.add("'signature' é obrigatório e não pode ser vazio");
-        } else {
-            validateBase64Field("signature", request.getSignature(), errors);
         }
         return errors;
     }

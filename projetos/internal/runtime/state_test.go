@@ -60,7 +60,7 @@ func TestRemoveIdempotent(t *testing.T) {
 func TestJarPath(t *testing.T) {
 	dir := t.TempDir()
 	sm := stateManagerWithDir(t, dir)
-	expected := filepath.Join(dir, "assinador.jar")
+	expected := filepath.Join(dir, ".hubsaude", "assinador.jar")
 	if got := sm.JarPath("assinador.jar"); got != expected {
 		t.Errorf("JarPath: esperado %q, obteve %q", expected, got)
 	}
