@@ -19,6 +19,4 @@ func Execute() {
 	}
 }
 
-func init() {
-	// Flags and configs can be defined here
-}
+func init() {}

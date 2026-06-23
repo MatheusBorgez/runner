@@ -1,8 +1,7 @@
-name: CI & Release
+name: CI & Release (legado - substituído por build.yml e release.yml)
 
 on:
-  push:
-    branches: [ "main" ]
+  workflow_dispatch: # só executa manualmente
 
 permissions:
   contents: write

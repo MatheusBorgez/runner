@@ -1,24 +1,53 @@
-# Compiled class file
+# ─── Java ────────────────────────────────────────────────────────────────────
 *.class
-
-# Log file
-*.log
-
-# BlueJ files
 *.ctxt
-
-# Mobile Tools for Java (J2ME)
 .mtj.tmp/
+hs_err_pid*
+replay_pid*
 
-# Package Files #
+# Artefatos Maven (nunca versionar target/)
+target/
 *.jar
 *.war
 *.nar
 *.ear
+
+# IDE Java
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# ─── Go ──────────────────────────────────────────────────────────────────────
+# Binários compilados
+projetos/dist/
+*.exe
+*.test
+
+# Cache de build Go
+__debug_bin*
+
+# ─── Arquivos de sistema ──────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.log
+
+# ─── Editores / IDEs ─────────────────────────────────────────────────────────
+.vscode/settings.json
+.vscode/*.code-workspace
+*.swp
+*.swo
+*~
+
+# ─── Ambiente local ───────────────────────────────────────────────────────────
+*.env
+.env.local
+.env.*.local
+
+# ─── Comprimidos (distribuição) ───────────────────────────────────────────────
 *.zip
 *.tar.gz
 *.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
+# ─── implementacao/ (artefatos externos sem fonte aqui) ───────────────────────
+implementacao/

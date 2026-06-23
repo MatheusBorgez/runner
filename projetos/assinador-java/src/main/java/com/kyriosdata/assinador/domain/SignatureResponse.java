@@ -1,6 +1,10 @@
 package com.kyriosdata.assinador.domain;
 
+/**
+ * Resposta de operações de assinatura e validação.
+ */
 public class SignatureResponse {
+
     private String signature;
     private boolean valid;
     private String message;
@@ -13,27 +17,20 @@ public class SignatureResponse {
         this.message = message;
     }
 
-    public String getSignature() {
-        return signature;
+    public static SignatureResponse success(String signature, String message) {
+        return new SignatureResponse(signature, true, message);
     }
 
-    public void setSignature(String signature) {
-        this.signature = signature;
+    public static SignatureResponse error(String message) {
+        return new SignatureResponse(null, false, message);
     }
 
-    public boolean isValid() {
-        return valid;
-    }
+    public String getSignature() { return signature; }
+    public void setSignature(String signature) { this.signature = signature; }
 
-    public void setValid(boolean valid) {
-        this.valid = valid;
-    }
+    public boolean isValid() { return valid; }
+    public void setValid(boolean valid) { this.valid = valid; }
 
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
+    public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
 }

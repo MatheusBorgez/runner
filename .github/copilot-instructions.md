@@ -51,4 +51,8 @@ Este é um trabalho prático da disciplina de **Implementação e Integração**
 - **assinatura**: CLI multiplataforma (interface para o usuário)
 - **assinador.jar**: aplicação Java que simula operações de assinatura digital
 
-Consulte o arquivo `contexto.md` para detalhes completos sobre escopo, requisitos e arquitetura.
+Consulte os seguintes documentos para detalhes completos:
+- [`especificacao.md`](../especificacao.md) — requisitos funcionais, critérios de aceite, épicos US-01 a US-05
+- [`design.md`](../design.md) — arquitetura C4 (contexto e contêineres)
+- [`projetos/README.md`](../projetos/README.md) — como compilar, testar e usar
+- [`docs/adr/`](../docs/adr/) — decisões arquiteturais (ADRs)
