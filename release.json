@@ -1,15 +1,15 @@
 {
   "validador": {
-    "url": "https://github.com/kyriosdata/runner/releases/download/hubsaude-validador-ui-v0.1.11/hubsaude-validador-ui-0.1.11-exec.jar",
-    "version": "0.1.11",
-    "tag": "hubsaude-validador-ui-v0.1.11",
-    "sha256": "e0766817b68b414438a30208f56f6af9568df6225af2d5b2dec9ef10729bb9eb"
+    "url": "https://github.com/kyriosdata/runner/releases/download/hubsaude-validador-ui-v0.1.12/hubsaude-validador-ui-0.1.12-exec.jar",
+    "version": "0.1.12",
+    "tag": "hubsaude-validador-ui-v0.1.12",
+    "sha256": "20b32ad77f2a98b9bfa1b545f2c5299622a0f83dfdd780b8ff6fa92849f8fcc4"
   },
   "simulador": {
-    "url": "https://github.com/kyriosdata/runner/releases/download/hubsaude-simulador-v0.1.7/hubsaude-simulador-0.1.7.jar",
-    "version": "0.1.7",
-    "tag": "hubsaude-simulador-v0.1.7",
-    "sha256": "0e7694011f91552e1ce11c2d2b386ace3eed0cb46863c7226c7920d5441408ab"
+    "url": "https://github.com/kyriosdata/runner/releases/download/hubsaude-simulador-v0.1.10/hubsaude-simulador-0.1.10.jar",
+    "version": "0.1.10",
+    "tag": "hubsaude-simulador-v0.1.10",
+    "sha256": "6f9d9614a5631247d3f0bc56076764f86cf0f3397e6b90d78f58f0d49d173ef0"
   },
   "jre": {
     "windows_x64": "https://api.adoptium.net/v3/binary/latest/21/ga/windows/x64/jre/hotspot/normal/eclipse",
