@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 SES-GO / UFG
+# Todos os direitos reservados.
+
 #
 # Instalador do hubsaude-cli para Linux e macOS.
 #
@@ -105,9 +108,16 @@ esac
 asset="${BIN_NAME}-${os}-${arch}"
 info "Plataforma detectada: ${os}/${arch} (binário: ${asset})"
 
-# Cabeçalho de autenticação opcional (apenas para rate limit da API)
-auth=()
-[[ -n "${GITHUB_TOKEN:-}" ]] && auth=(-H "Authorization: Bearer ${GITHUB_TOKEN}")
+# Cabeçalho de autenticação opcional (apenas para rate limit da API).
+# Em Bash 3 (macOS runner), expandir array vazia com `set -u` aborta o script;
+# o helper abaixo evita essa expansão quando não há token.
+curl_auth() {
+  if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+    curl -H "Authorization: Bearer ${GITHUB_TOKEN}" "$@"
+  else
+    curl "$@"
+  fi
+}
 
 # ----------------------------------------------------------------------------
 # Resolução da versão / tag
@@ -124,7 +134,7 @@ else
   # O repositório de distribuição hospeda releases de vários componentes;
   # filtramos estritamente pelo prefixo do CLI e tomamos a mais recente
   # (a API retorna as releases em ordem cronológica decrescente).
-  tag="$(curl -fsSL "${auth[@]}" "${GH_API}/repos/${REPO}/releases?per_page=100" \
+  tag="$(curl_auth -fsSL "${GH_API}/repos/${REPO}/releases?per_page=100" \
     | grep -o "\"tag_name\"[[:space:]]*:[[:space:]]*\"${TAG_PREFIX}[^\"]*\"" \
     | sed -E "s/.*\"(${TAG_PREFIX}[^\"]*)\".*/\1/" \
     | head -n1 || true)"
@@ -142,10 +152,10 @@ trap 'rm -rf "$tmp"' EXIT
 base="${GH_DL}/${REPO}/releases/download/${tag}"
 
 info "Baixando ${asset}..."
-curl -fSL --progress-bar "${auth[@]}" "${base}/${asset}" -o "${tmp}/${asset}" \
+curl_auth -fSL --progress-bar "${base}/${asset}" -o "${tmp}/${asset}" \
   || die "falha ao baixar ${asset} (a release ${tag} contém o binário desta plataforma?)"
 info "Baixando checksums.txt..."
-curl -fsSL "${auth[@]}" "${base}/checksums.txt" -o "${tmp}/checksums.txt" \
+curl_auth -fsSL "${base}/checksums.txt" -o "${tmp}/checksums.txt" \
   || die "falha ao baixar checksums.txt da release ${tag}"
 
 # ----------------------------------------------------------------------------
