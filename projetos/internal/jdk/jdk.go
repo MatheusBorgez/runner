@@ -1,4 +1,3 @@
-// Package jdk detecta e provisiona o JDK 21 (Temurin) em ~/.hubsaude/jdk/.
 package jdk
 
 import (
@@ -15,17 +14,15 @@ import (
 	"strings"
 )
 
-// Provisioner detecta e baixa o JDK se necessário.
 type Provisioner struct {
 	jdkDir string
 }
 
-// NewProvisioner cria um Provisioner usando o diretório informado.
 func NewProvisioner(jdkDir string) *Provisioner {
 	return &Provisioner{jdkDir: jdkDir}
 }
 
-// Ensure garante que um JDK/JRE 21 está disponível e retorna o caminho do executável java.
+// Ensure retorna o caminho do executável java, baixando o JDK 21 Temurin se necessário.
 func (p *Provisioner) Ensure() (string, error) {
 	if java := p.localJava(); java != "" {
 		return java, nil
@@ -205,6 +202,7 @@ func extractZip(archivePath, destDir string) error {
 	return nil
 }
 
+// safeJoin evita zip-slip: rejeita caminhos que escapam do destino.
 func safeJoin(base, name string) string {
 	target := filepath.Join(base, name)
 	if !strings.HasPrefix(target, filepath.Clean(base)+string(os.PathSeparator)) {

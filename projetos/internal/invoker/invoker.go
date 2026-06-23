@@ -1,4 +1,3 @@
-// Package invoker gerencia a invocação do assinador.jar nos modos local e HTTP.
 package invoker
 
 import (
@@ -14,43 +13,36 @@ import (
 	"time"
 )
 
-// SignRequest representa os parâmetros para criar uma assinatura.
 type SignRequest struct {
 	Content string `json:"content"`
 	Token   string `json:"token,omitempty"`
 }
 
-// ValidateRequest representa os parâmetros para validar uma assinatura.
 type ValidateRequest struct {
 	Content   string `json:"content"`
 	Signature string `json:"signature"`
 }
 
-// SignatureResponse é a resposta do assinador.jar.
 type SignatureResponse struct {
 	Signature string `json:"signature"`
 	Valid     bool   `json:"valid"`
 	Message   string `json:"message"`
 }
 
-// Invoker invoca o assinador.jar via linha de comando (local) ou HTTP (servidor).
 type Invoker struct {
 	java    string
 	jarPath string
 	baseURL string
 }
 
-// NewLocalInvoker cria um Invoker para o modo local (subprocess).
 func NewLocalInvoker(javaPath, jarPath string) *Invoker {
 	return &Invoker{java: javaPath, jarPath: jarPath}
 }
 
-// NewHTTPInvoker cria um Invoker para o modo servidor (HTTP).
 func NewHTTPInvoker(baseURL string) *Invoker {
 	return &Invoker{baseURL: strings.TrimRight(baseURL, "/")}
 }
 
-// Sign cria uma assinatura simulada via assinador.jar.
 func (inv *Invoker) Sign(req SignRequest) (*SignatureResponse, error) {
 	if inv.baseURL != "" {
 		return inv.httpPost("/sign", req)
@@ -62,7 +54,6 @@ func (inv *Invoker) Sign(req SignRequest) (*SignatureResponse, error) {
 	return inv.runLocal(args)
 }
 
-// Validate valida uma assinatura simulada via assinador.jar.
 func (inv *Invoker) Validate(req ValidateRequest) (*SignatureResponse, error) {
 	if inv.baseURL != "" {
 		return inv.httpPost("/validate", req)
@@ -70,7 +61,6 @@ func (inv *Invoker) Validate(req ValidateRequest) (*SignatureResponse, error) {
 	return inv.runLocal([]string{"validate", "--content", req.Content, "--signature", req.Signature})
 }
 
-// Health verifica se o servidor HTTP está respondendo.
 func (inv *Invoker) Health() error {
 	if inv.baseURL == "" {
 		return errors.New("Health() requer modo HTTP")
@@ -87,7 +77,6 @@ func (inv *Invoker) Health() error {
 	return nil
 }
 
-// Shutdown solicita o encerramento do servidor HTTP.
 func (inv *Invoker) Shutdown() error {
 	if inv.baseURL == "" {
 		return errors.New("Shutdown() requer modo HTTP")

@@ -25,7 +25,6 @@ var startCmd = &cobra.Command{
 
 O simulador.jar é baixado automaticamente se não estiver disponível localmente.
 O JRE necessário também é provisionado automaticamente em ~/.hubsaude/.
-Verifica se a porta 8443 está disponível antes de iniciar.
 
 EXEMPLOS:
   simulador start
@@ -36,21 +35,13 @@ EXEMPLOS:
 var stopCmd = &cobra.Command{
 	Use:   "stop",
 	Short: "Encerra o Simulador do HubSaúde",
-	Long: `Encerra o simulador.jar via endpoint /shutdown ou por PID.
-
-EXEMPLOS:
-  simulador stop`,
-	RunE: runStop,
+	RunE:  runStop,
 }
 
 var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Exibe o status do Simulador do HubSaúde",
-	Long: `Exibe se o simulador.jar está em execução via /api/info.
-
-EXEMPLOS:
-  simulador status`,
-	RunE: runStatus,
+	RunE:  runStatus,
 }
 
 func init() {
@@ -68,7 +59,7 @@ func runStart(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	// Verifica instância ativa (idempotência de start)
+	// Idempotência: reutiliza instância ativa
 	if state, loadErr := sm.Load(simuladorStateName); loadErr == nil && runtime.PidAlive(state.PID) {
 		if simuladorHealthy() {
 			fmt.Printf("Simulador já está em execução na porta %d (PID %d).\n", state.Port, state.PID)
@@ -77,7 +68,6 @@ func runStart(cmd *cobra.Command, _ []string) error {
 		sm.Remove(simuladorStateName) //nolint:errcheck
 	}
 
-	// Verifica disponibilidade da porta
 	if portOccupied(defaultSimuladorPort) {
 		return fmt.Errorf(
 			"porta %d já está em uso por outro processo\n"+
@@ -90,9 +80,9 @@ func runStart(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	javaPath, err := ensureJava(sm)
+	javaPath, err := jdk.NewProvisioner(sm.JdkDir()).Ensure()
 	if err != nil {
-		return err
+		return fmt.Errorf("JDK não disponível: %w", err)
 	}
 
 	proc := exec.Command(javaPath, "-jar", jarPath)
@@ -100,8 +90,9 @@ func runStart(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("falha ao iniciar simulador.jar: %w", err)
 	}
 
-	state := runtime.ProcessState{PID: proc.Process.Pid, Port: defaultSimuladorPort, Name: simuladorStateName}
-	if err := sm.Save(simuladorStateName, state); err != nil {
+	if err := sm.Save(simuladorStateName, runtime.ProcessState{
+		PID: proc.Process.Pid, Port: defaultSimuladorPort, Name: simuladorStateName,
+	}); err != nil {
 		fmt.Fprintf(os.Stderr, "Aviso: não foi possível salvar estado: %v\n", err)
 	}
 
@@ -126,7 +117,6 @@ func runStop(_ *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	// Tenta shutdown via endpoint
 	client := &http.Client{Timeout: 5 * time.Second}
 	resp, shutErr := client.Post(
 		fmt.Sprintf("http://localhost:%d/shutdown", defaultSimuladorPort),
@@ -136,7 +126,6 @@ func runStop(_ *cobra.Command, _ []string) error {
 		resp.Body.Close()
 	}
 
-	// Mata pelo PID como fallback
 	if loadErr == nil && runtime.PidAlive(state.PID) {
 		if p, err := os.FindProcess(state.PID); err == nil {
 			p.Kill() //nolint:errcheck
@@ -155,7 +144,6 @@ func runStatus(_ *cobra.Command, _ []string) error {
 	}
 
 	state, loadErr := sm.Load(simuladorStateName)
-
 	if loadErr != nil || !runtime.PidAlive(state.PID) {
 		if loadErr == nil {
 			sm.Remove(simuladorStateName) //nolint:errcheck
@@ -175,8 +163,6 @@ func runStatus(_ *cobra.Command, _ []string) error {
 		state.PID, state.Port, resp.StatusCode)
 	return nil
 }
-
-// ─── helpers ─────────────────────────────────────────────────────────────────
 
 func simuladorHealthy() bool {
 	client := &http.Client{Timeout: 2 * time.Second}
@@ -209,7 +195,6 @@ func waitSimuladorReady(maxSeconds int) error {
 
 func ensureSimuladorJar(sm *runtime.StateManager, source string) (string, error) {
 	jarPath := sm.JarPath("simulador.jar")
-
 	if source != "" {
 		fmt.Fprintln(os.Stderr, "Baixando simulador.jar de fonte alternativa:", source)
 		if err := release.DownloadFile(jarPath, source); err != nil {
@@ -217,11 +202,5 @@ func ensureSimuladorJar(sm *runtime.StateManager, source string) (string, error)
 		}
 		return jarPath, nil
 	}
-
-	mgr := release.NewManager(sm.Dir())
-	return mgr.EnsureSimulador()
-}
-
-func ensureJava(sm *runtime.StateManager) (string, error) {
-	return jdk.NewProvisioner(sm.JdkDir()).Ensure()
+	return release.NewManager(sm.Dir()).EnsureSimulador()
 }

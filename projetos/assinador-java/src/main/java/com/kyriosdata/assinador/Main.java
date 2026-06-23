@@ -3,19 +3,6 @@ package com.kyriosdata.assinador;
 import com.kyriosdata.assinador.cli.CliRunner;
 import com.kyriosdata.assinador.http.SignatureServer;
 
-/**
- * Ponto de entrada do assinador.jar.
- *
- * <p>Modos de uso:
- * <ul>
- *   <li>{@code java -jar assinador.jar sign --content "..." [--token "..."]}</li>
- *   <li>{@code java -jar assinador.jar validate --content "..." --signature "..."}</li>
- *   <li>{@code java -jar assinador.jar server [--port 8080] [--timeout 30]}</li>
- * </ul>
- *
- * <p>Saída em stdout: JSON com campos {@code signature}, {@code valid}, {@code message}.
- * Erros vão para stderr; exit code 0 = sucesso, 1 = erro do usuário, 2 = erro do sistema.
- */
 public class Main {
 
     public static void main(String[] args) {
@@ -26,20 +13,12 @@ public class Main {
             System.exit(1);
         }
 
-        String command = args[0];
-
-        switch (command) {
-            case "server" -> {
-                SignatureServer server = new SignatureServer();
-                server.run(args);
-            }
-            case "sign", "validate" -> {
-                CliRunner runner = new CliRunner();
-                runner.run(args);
-            }
+        switch (args[0]) {
+            case "server" -> new SignatureServer().run(args);
+            case "sign", "validate" -> new CliRunner().run(args);
             case "--help", "-h", "help" -> printHelp();
             default -> {
-                System.err.println("Comando desconhecido: " + command);
+                System.err.println("Comando desconhecido: " + args[0]);
                 System.err.println("Comandos disponíveis: sign, validate, server");
                 System.exit(1);
             }
@@ -59,9 +38,6 @@ public class Main {
               java -jar assinador.jar sign --content <conteudo> [--token <token>]
               java -jar assinador.jar validate --content <conteudo> --signature <assinatura>
               java -jar assinador.jar server [--port <porta>] [--timeout <minutos>]
-
-            OPÇÕES COMUNS:
-              --help, -h     Exibe esta ajuda
 
             SAÍDA:
               JSON em stdout: {"signature":"...","valid":true,"message":"..."}

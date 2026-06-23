@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// version é sobrescrita em build via -ldflags "-X github.com/kyriosdata/runner/cmd/assinatura/cli.version=<tag>"
+// version é sobrescrita em build: -ldflags "-X github.com/kyriosdata/runner/cmd/assinatura/cli.version=<tag>"
 var version = "dev"
 
 var versionCmd = &cobra.Command{

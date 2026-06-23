@@ -1,8 +1,5 @@
 package com.kyriosdata.assinador.domain;
 
-/**
- * Resposta de operações de assinatura e validação.
- */
 public class SignatureResponse {
 
     private String signature;

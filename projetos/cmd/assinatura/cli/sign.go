@@ -77,7 +77,6 @@ func buildInvoker(port int, local bool) (*invoker.Invoker, error) {
 		}
 	}
 
-	// Modo local
 	jdkProv := jdk.NewProvisioner(sm.JdkDir())
 	javaPath, err := jdkProv.Ensure()
 	if err != nil {

@@ -1,4 +1,3 @@
-// Package cli define os comandos do CLI assinatura usando Cobra.
 package cli
 
 import (
@@ -28,7 +27,6 @@ EXEMPLOS:
   assinatura version`,
 }
 
-// Execute é o ponto de entrada do CLI assinatura.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

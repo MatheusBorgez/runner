@@ -12,17 +12,10 @@ import java.util.List;
 import java.util.logging.Logger;
 
 /**
- * Implementação de {@link SignatureService} com suporte a PKCS#11 via {@code SunPKCS11}.
+ * Usa SunPKCS11 quando um arquivo de configuração é fornecido.
+ * Faz fallback para {@link FakeSignatureService} com aviso quando o dispositivo não está disponível.
  *
- * <p>Quando um dispositivo PKCS#11 (token ou smart card) está disponível, usa-o para
- * operações de assinatura. Caso contrário, delega para {@link FakeSignatureService} com aviso.
- *
- * <p>Para uso com SoftHSM2 em testes de integração, configure o arquivo de configuração PKCS#11:
- * <pre>
- *   --pkcs11-config /path/to/softhsm2.cfg
- * </pre>
- *
- * <p>Arquivo de configuração de exemplo ({@code softhsm2.cfg}):
+ * Arquivo de configuração de exemplo para SoftHSM2:
  * <pre>
  *   name = SoftHSM2
  *   library = /usr/lib/softhsm/libsofthsm2.so
@@ -46,7 +39,6 @@ public class Pkcs11SignatureService implements SignatureService {
                 if (pkcs11Provider != null) {
                     Provider configured = pkcs11Provider.configure(pkcs11ConfigPath);
                     Security.addProvider(configured);
-                    LOG.info("SunPKCS11 configurado: " + pkcs11ConfigPath);
                     available = true;
                     svc = new Pkcs11DelegateService(configured);
                 } else {
@@ -83,10 +75,6 @@ public class Pkcs11SignatureService implements SignatureService {
         return pkcs11Available;
     }
 
-    /**
-     * Delega operações para o provider PKCS#11 configurado.
-     * Neste protótipo, simula a operação usando o provider como chave de contexto.
-     */
     private static class Pkcs11DelegateService extends FakeSignatureService {
 
         private final Provider provider;
@@ -101,9 +89,9 @@ public class Pkcs11SignatureService implements SignatureService {
             if (!errors.isEmpty()) {
                 return SignatureResponse.error(String.join("; ", errors));
             }
-            // Em produção, aqui seria: KeyStore ks = KeyStore.getInstance("PKCS11", provider); ...
-            String pkcs11Sig = "PKCS11_SIM_" + provider.getName() + "_BASE64==";
-            return SignatureResponse.success(pkcs11Sig, "Assinatura criada via PKCS#11 simulado");
+            // Em produção: KeyStore ks = KeyStore.getInstance("PKCS11", provider); ...
+            String sig = "PKCS11_SIM_" + provider.getName() + "_BASE64==";
+            return SignatureResponse.success(sig, "Assinatura criada via PKCS#11 simulado");
         }
     }
 }

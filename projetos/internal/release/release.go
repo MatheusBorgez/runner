@@ -1,4 +1,3 @@
-// Package release gerencia o download de artefatos via release.json do repositório upstream.
 package release
 
 import (
@@ -14,10 +13,8 @@ import (
 	"strings"
 )
 
-// ReleaseManifestURL é a URL estável do manifesto de releases.
 const ReleaseManifestURL = "https://raw.githubusercontent.com/kyriosdata/runner/main/release.json"
 
-// Manifest representa o conteúdo do release.json.
 type Manifest struct {
 	Jar       *ArtifactEntry `json:"jar,omitempty"`
 	Simulador *ArtifactEntry `json:"simulador,omitempty"`
@@ -25,34 +22,29 @@ type Manifest struct {
 	JRE       *JREEntry      `json:"jre,omitempty"`
 }
 
-// ArtifactEntry descreve um artefato com URL e versão.
 type ArtifactEntry struct {
 	URL     string `json:"url"`
 	Version string `json:"version"`
 }
 
-// JREEntry descreve URLs de download do JRE por plataforma.
 type JREEntry struct {
-	WindowsX64  string `json:"windows_x64"`
+	WindowsX64   string `json:"windows_x64"`
 	WindowsArm64 string `json:"windows_arm64,omitempty"`
-	LinuxX64    string `json:"linux_x64"`
-	LinuxArm64  string `json:"linux_arm64,omitempty"`
-	MacX64      string `json:"mac_x64"`
-	MacArm64    string `json:"mac_arm64,omitempty"`
+	LinuxX64     string `json:"linux_x64"`
+	LinuxArm64   string `json:"linux_arm64,omitempty"`
+	MacX64       string `json:"mac_x64"`
+	MacArm64     string `json:"mac_arm64,omitempty"`
 }
 
-// Manager gerencia downloads de artefatos.
 type Manager struct {
 	manifestURL string
 	cacheDir    string
 }
 
-// NewManager cria um Manager usando o diretório de cache informado.
 func NewManager(cacheDir string) *Manager {
 	return &Manager{manifestURL: ReleaseManifestURL, cacheDir: cacheDir}
 }
 
-// FetchManifest baixa e parseia o release.json.
 func (m *Manager) FetchManifest() (*Manifest, error) {
 	resp, err := http.Get(m.manifestURL) //nolint:gosec
 	if err != nil {
@@ -69,7 +61,6 @@ func (m *Manager) FetchManifest() (*Manifest, error) {
 	return &manifest, nil
 }
 
-// JREDownloadURL retorna a URL de download do JRE para a plataforma atual.
 func (m *Manager) JREDownloadURL(manifest *Manifest) (string, error) {
 	if manifest.JRE == nil {
 		return "", fmt.Errorf("release.json não contém entradas de JRE")
@@ -102,8 +93,7 @@ func (m *Manager) JREDownloadURL(manifest *Manifest) (string, error) {
 	}
 }
 
-// EnsureSimulador garante que simulador.jar está disponível localmente.
-// Baixa apenas se a versão local for diferente da remota.
+// EnsureSimulador baixa o simulador.jar apenas se a versão local for diferente da remota.
 func (m *Manager) EnsureSimulador() (string, error) {
 	manifest, err := m.FetchManifest()
 	if err != nil {
@@ -136,7 +126,6 @@ func (m *Manager) EnsureSimulador() (string, error) {
 	return jarPath, nil
 }
 
-// DownloadFile baixa um arquivo de uma URL para o destino.
 func DownloadFile(dest, url string) error {
 	resp, err := http.Get(url) //nolint:gosec
 	if err != nil {
@@ -155,7 +144,6 @@ func DownloadFile(dest, url string) error {
 	return err
 }
 
-// SHA256File calcula o SHA256 de um arquivo.
 func SHA256File(path string) (string, error) {
 	f, err := os.Open(path)
 	if err != nil {

@@ -10,12 +10,8 @@ import java.util.List;
 
 /**
  * Implementação simulada de {@link SignatureService}.
- *
- * <p>Realiza validação rigorosa dos parâmetros conforme as especificações
- * do caso de uso de assinatura digital da Plataforma HubSaúde (FHIR Goiás),
- * retornando respostas pré-construídas para requisições válidas.
- *
- * <p>O foco está na validação de parâmetros. Nenhuma criptografia real é executada.
+ * Valida parâmetros conforme as especificações FHIR Goiás e retorna
+ * respostas pré-construídas para requisições válidas.
  */
 public class FakeSignatureService implements SignatureService {
 
@@ -36,65 +32,43 @@ public class FakeSignatureService implements SignatureService {
         if (!errors.isEmpty()) {
             return SignatureResponse.error(String.join("; ", errors));
         }
-
         boolean isValid = FAKE_SIGNATURE.equals(request.getSignature());
-        String message = isValid ? "Assinatura válida" : "Assinatura inválida";
-        return new SignatureResponse(request.getSignature(), isValid, message);
+        return new SignatureResponse(request.getSignature(), isValid, isValid ? "Assinatura válida" : "Assinatura inválida");
     }
 
-    /**
-     * Valida todos os campos obrigatórios e o formato da requisição de criação.
-     *
-     * @return lista de mensagens de erro; vazia se válido
-     */
     protected List<String> validateSignRequest(SignRequest request) {
         List<String> errors = new ArrayList<>();
-
         if (request == null) {
             errors.add("Requisição nula");
             return errors;
         }
-
-        // content: obrigatório, não vazio, máx 10 MB em Base64
         if (isBlank(request.getContent())) {
             errors.add("'content' é obrigatório e não pode ser vazio");
         } else {
             validateBase64Field("content", request.getContent(), errors);
         }
-
-        // token: opcional, mas se presente não pode ser vazio
         if (request.getToken() != null && request.getToken().isBlank()) {
             errors.add("'token' não pode ser string vazia quando informado; omita o campo se não aplicável");
         }
-
         return errors;
     }
 
-    /**
-     * Valida todos os campos obrigatórios e o formato da requisição de validação.
-     *
-     * @return lista de mensagens de erro; vazia se válido
-     */
     protected List<String> validateValidateRequest(ValidateRequest request) {
         List<String> errors = new ArrayList<>();
-
         if (request == null) {
             errors.add("Requisição nula");
             return errors;
         }
-
         if (isBlank(request.getContent())) {
             errors.add("'content' é obrigatório e não pode ser vazio");
         } else {
             validateBase64Field("content", request.getContent(), errors);
         }
-
         if (isBlank(request.getSignature())) {
             errors.add("'signature' é obrigatório e não pode ser vazio");
         } else {
             validateBase64Field("signature", request.getSignature(), errors);
         }
-
         return errors;
     }
 

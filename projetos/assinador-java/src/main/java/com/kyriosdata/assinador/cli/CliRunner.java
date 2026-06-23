@@ -7,12 +7,6 @@ import com.kyriosdata.assinador.domain.SignRequest;
 import com.kyriosdata.assinador.domain.SignatureResponse;
 import com.kyriosdata.assinador.domain.ValidateRequest;
 
-/**
- * Executa comandos {@code sign} e {@code validate} em modo CLI (invocação direta).
- *
- * <p>Lê parâmetros via flags {@code --content}, {@code --token}, {@code --signature}
- * e escreve o resultado como JSON em stdout.
- */
 public class CliRunner {
 
     private final SignatureService service;
@@ -41,12 +35,9 @@ public class CliRunner {
     }
 
     private void handleSign(ArgParser parser) {
-        String content = parser.get("--content");
-        String token = parser.get("--token");
-
         SignRequest request = new SignRequest();
-        request.setContent(content);
-        request.setToken(token);
+        request.setContent(parser.get("--content"));
+        request.setToken(parser.get("--token"));
 
         SignatureResponse response = service.sign(request);
         System.out.println(gson.toJson(response));
@@ -57,12 +48,9 @@ public class CliRunner {
     }
 
     private void handleValidate(ArgParser parser) {
-        String content = parser.get("--content");
-        String signature = parser.get("--signature");
-
         ValidateRequest request = new ValidateRequest();
-        request.setContent(content);
-        request.setSignature(signature);
+        request.setContent(parser.get("--content"));
+        request.setSignature(parser.get("--signature"));
 
         SignatureResponse response = service.validate(request);
         System.out.println(gson.toJson(response));

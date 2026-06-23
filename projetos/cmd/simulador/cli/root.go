@@ -1,4 +1,3 @@
-// Package cli define os comandos do CLI simulador usando Cobra.
 package cli
 
 import (
@@ -23,7 +22,6 @@ EXEMPLOS:
   simulador version`,
 }
 
-// Execute é o ponto de entrada do CLI simulador.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

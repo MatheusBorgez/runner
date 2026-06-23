@@ -18,7 +18,6 @@ var startCmd = &cobra.Command{
 	Long: `Inicia o assinador.jar como servidor HTTP em background.
 
 O PID e a porta são registrados em ~/.hubsaude/ para gestão posterior.
-Por padrão o modo servidor é preferido; use --local nos comandos sign/validate para substituir.
 
 EXEMPLOS:
   assinatura start
@@ -30,9 +29,7 @@ EXEMPLOS:
 var stopCmd = &cobra.Command{
 	Use:   "stop",
 	Short: "Encerra o assinador.jar em execução",
-	Long: `Encerra o assinador.jar via endpoint /shutdown ou por PID.
-
-EXEMPLOS:
+	Long: `EXEMPLOS:
   assinatura stop
   assinatura stop --port 9090`,
 	RunE: runStop,
@@ -41,9 +38,7 @@ EXEMPLOS:
 var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Exibe o status do assinador.jar",
-	Long: `Exibe se o assinador.jar está em execução e qual porta está usando.
-
-EXEMPLOS:
+	Long: `EXEMPLOS:
   assinatura status`,
 	RunE: runStatus,
 }
@@ -68,7 +63,7 @@ func runStart(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	// Verifica instância ativa (idempotência de start)
+	// Idempotência: reutiliza instância ativa
 	if state, err := sm.Load("assinador"); err == nil && runtime.PidAlive(state.PID) {
 		baseURL := fmt.Sprintf("http://localhost:%d", state.Port)
 		if invoker.NewHTTPInvoker(baseURL).Health() == nil {

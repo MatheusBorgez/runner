@@ -21,24 +21,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
-/**
- * Servidor HTTP do assinador.jar.
- *
- * <p>Expõe os endpoints:
- * <ul>
- *   <li>{@code POST /sign}      — cria assinatura simulada</li>
- *   <li>{@code POST /validate}  — valida assinatura simulada</li>
- *   <li>{@code GET  /health}    — verifica saúde do servidor</li>
- *   <li>{@code POST /shutdown}  — encerra o servidor de forma limpa</li>
- * </ul>
- *
- * <p>Porta padrão: 8080. Configurável via {@code --port}.
- * Auto-shutdown por inatividade configurável via {@code --timeout} (minutos).
- */
 public class SignatureServer {
 
     static final int DEFAULT_PORT = 8080;
-    static final int DEFAULT_TIMEOUT_MINUTES = 0; // 0 = sem timeout
+    static final int DEFAULT_TIMEOUT_MINUTES = 0;
 
     private static final Logger LOG = Logger.getLogger(SignatureServer.class.getName());
 
@@ -61,7 +47,6 @@ public class SignatureServer {
         ArgParser parser = new ArgParser(args, 1);
         int port = parser.getInt("--port", DEFAULT_PORT);
         int timeoutMinutes = parser.getInt("--timeout", DEFAULT_TIMEOUT_MINUTES);
-
         try {
             start(port, timeoutMinutes);
         } catch (IOException e) {
@@ -89,7 +74,6 @@ public class SignatureServer {
             scheduleInactivityShutdown(timeoutMinutes);
         }
 
-        // bloqueia thread principal
         Thread.currentThread().join();
     }
 
@@ -99,10 +83,8 @@ public class SignatureServer {
             t.setDaemon(true);
             return t;
         });
-
         long checkIntervalMs = Math.max(10_000, timeoutMinutes * 60_000L / 10);
-
-        timeoutTask = scheduler.scheduleAtFixedRate(() -> {
+        scheduler.scheduleAtFixedRate(() -> {
             long idleMs = System.currentTimeMillis() - lastActivityMs.get();
             if (idleMs >= timeoutMinutes * 60_000L) {
                 LOG.info("Timeout de inatividade atingido (" + timeoutMinutes + " min). Encerrando.");
@@ -113,42 +95,34 @@ public class SignatureServer {
     }
 
     public void stop() {
-        if (server != null) {
-            server.stop(1);
-        }
-        if (scheduler != null) {
-            scheduler.shutdownNow();
-        }
+        if (server != null) server.stop(1);
+        if (scheduler != null) scheduler.shutdownNow();
     }
 
     private void handleSign(HttpExchange exchange) throws IOException {
-        recordActivity();
+        lastActivityMs.set(System.currentTimeMillis());
         if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
             sendResponse(exchange, 405, "{\"valid\":false,\"message\":\"Método não permitido; use POST\"}");
             return;
         }
-        String body = readBody(exchange);
-        SignRequest request = gson.fromJson(body, SignRequest.class);
+        SignRequest request = gson.fromJson(readBody(exchange), SignRequest.class);
         SignatureResponse response = service.sign(request);
-        int status = response.isValid() ? 200 : 422;
-        sendResponse(exchange, status, gson.toJson(response));
+        sendResponse(exchange, response.isValid() ? 200 : 422, gson.toJson(response));
     }
 
     private void handleValidate(HttpExchange exchange) throws IOException {
-        recordActivity();
+        lastActivityMs.set(System.currentTimeMillis());
         if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
             sendResponse(exchange, 405, "{\"valid\":false,\"message\":\"Método não permitido; use POST\"}");
             return;
         }
-        String body = readBody(exchange);
-        ValidateRequest request = gson.fromJson(body, ValidateRequest.class);
+        ValidateRequest request = gson.fromJson(readBody(exchange), ValidateRequest.class);
         SignatureResponse response = service.validate(request);
-        int status = response.isValid() ? 200 : 422;
-        sendResponse(exchange, status, gson.toJson(response));
+        sendResponse(exchange, response.isValid() ? 200 : 422, gson.toJson(response));
     }
 
     private void handleHealth(HttpExchange exchange) throws IOException {
-        recordActivity();
+        lastActivityMs.set(System.currentTimeMillis());
         sendResponse(exchange, 200, "{\"status\":\"ok\"}");
     }
 
@@ -158,16 +132,11 @@ public class SignatureServer {
             return;
         }
         sendResponse(exchange, 200, "{\"status\":\"shutdown\"}");
-        LOG.info("Shutdown solicitado via endpoint /shutdown.");
+        LOG.info("Shutdown solicitado via /shutdown.");
         new Thread(() -> {
             try { Thread.sleep(200); } catch (InterruptedException ignored) { Thread.currentThread().interrupt(); }
             stop();
         }, "shutdown-thread").start();
-    }
-
-    private void recordActivity() {
-        // Apenas atualiza o timestamp; o watchdog verifica periodicamente
-        lastActivityMs.set(System.currentTimeMillis());
     }
 
     private String readBody(HttpExchange exchange) throws IOException {
