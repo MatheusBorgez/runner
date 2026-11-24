@@ -27,11 +27,25 @@ func (p *Provisioner) Ensure() (string, error) {
 	if java := p.localJava(); java != "" {
 		return java, nil
 	}
-	if java, err := exec.LookPath("java"); err == nil {
-		if ok, _ := isVersion21(java); ok {
-			return java, nil
-		}
+	if java := java21OnPath(); java != "" {
+		return java, nil
 	}
+	return p.downloadAndLocate()
+}
+
+func java21OnPath() string {
+	java, err := exec.LookPath("java")
+	if err != nil {
+		return ""
+	}
+	ok, _ := isVersion21(java)
+	if !ok {
+		return ""
+	}
+	return java
+}
+
+func (p *Provisioner) downloadAndLocate() (string, error) {
 	fmt.Fprintln(os.Stderr, "JDK 21 não encontrado. Baixando Eclipse Temurin 21...")
 	if err := p.download(); err != nil {
 		return "", fmt.Errorf("falha ao baixar JDK: %w", err)
