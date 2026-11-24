@@ -50,7 +50,7 @@ func (m *Manager) FetchManifest() (*Manifest, error) {
 	if err != nil {
 		return nil, fmt.Errorf("erro ao buscar release.json: %w", err)
 	}
-	defer resp.Body.Close()
+	defer closeQuietly(resp.Body)
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("HTTP %d ao buscar release.json", resp.StatusCode)
 	}
@@ -131,7 +131,7 @@ func DownloadFile(dest, url string) error {
 	if err != nil {
 		return fmt.Errorf("erro na requisição: %w", err)
 	}
-	defer resp.Body.Close()
+	defer closeQuietly(resp.Body)
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("HTTP %d", resp.StatusCode)
 	}
@@ -139,9 +139,18 @@ func DownloadFile(dest, url string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
-	_, err = io.Copy(f, resp.Body)
-	return err
+	if _, err := io.Copy(f, resp.Body); err != nil {
+		closeQuietly(f)
+		return err
+	}
+	// Arquivo de escrita: o erro do Close indica falha ao gravar no disco e precisa ser devolvido.
+	return f.Close()
+}
+
+// closeQuietly fecha recursos de leitura cujo erro de Close não tem tratamento útil,
+// deixando explícito que o descarte é intencional.
+func closeQuietly(c io.Closer) {
+	_ = c.Close()
 }
 
 func SHA256File(path string) (string, error) {
@@ -149,7 +158,7 @@ func SHA256File(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer f.Close()
+	defer closeQuietly(f)
 	h := sha256.New()
 	if _, err := io.Copy(h, f); err != nil {
 		return "", err
