@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/kyriosdata/runner/internal/invoker"
@@ -81,5 +83,19 @@ func TestParseInvalidJSON(t *testing.T) {
 	_, err := inv.Sign(invoker.SignRequest{Content: "dGVzdGU="})
 	if err == nil {
 		t.Error("esperado erro para resposta JSON inválida")
+	}
+}
+
+func TestLocalInvokerJavaInexistenteNaoDaPanic(t *testing.T) {
+	// cria um assinador.jar falso só pra passar da checagem de os.Stat
+	jar := filepath.Join(t.TempDir(), "assinador.jar")
+	if err := os.WriteFile(jar, []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	inv := invoker.NewLocalInvoker("/caminho/que/nao/existe/java", jar)
+	_, err := inv.Sign(invoker.SignRequest{Content: "teste"})
+	if err == nil {
+		t.Fatal("esperava erro quando o java não existe")
 	}
 }

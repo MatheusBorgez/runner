@@ -102,14 +102,18 @@ func (inv *Invoker) runLocal(args []string) (*SignatureResponse, error) {
 	cmd.Stderr = &stderr
 
 	err := cmd.Run()
-	if err != nil {
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) && exitErr.ExitCode() == 1 {
-			return parseResponse(stdout.Bytes())
-		}
-		return nil, fmt.Errorf("erro ao executar assinador.jar (exit %d): %s", exitErr.ExitCode(), stderr.String())
+	if err == nil {
+		return parseResponse(stdout.Bytes())
 	}
-	return parseResponse(stdout.Bytes())
+
+	var exitErr *exec.ExitError
+	if !errors.As(err, &exitErr) {
+		return nil, fmt.Errorf("erro ao executar assinador.jar: %w", err)
+	}
+	if exitErr.ExitCode() == 1 {
+		return parseResponse(stdout.Bytes())
+	}
+	return nil, fmt.Errorf("erro ao executar assinador.jar (exit %d): %s", exitErr.ExitCode(), stderr.String())
 }
 
 func (inv *Invoker) httpPost(path string, body any) (*SignatureResponse, error) {
