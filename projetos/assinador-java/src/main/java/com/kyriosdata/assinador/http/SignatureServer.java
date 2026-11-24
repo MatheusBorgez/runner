@@ -26,6 +26,10 @@ public class SignatureServer {
     static final int DEFAULT_PORT = 8080;
     static final int DEFAULT_TIMEOUT_MINUTES = 0;
 
+    private static final int HTTP_OK = 200;
+    private static final int HTTP_METHOD_NOT_ALLOWED = 405;
+    private static final int HTTP_UNPROCESSABLE_ENTITY = 422;
+
     private static final Logger LOG = Logger.getLogger(SignatureServer.class.getName());
 
     private final SignatureService service;
@@ -102,36 +106,36 @@ public class SignatureServer {
     private void handleSign(HttpExchange exchange) throws IOException {
         lastActivityMs.set(System.currentTimeMillis());
         if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
-            sendResponse(exchange, 405, "{\"valid\":false,\"message\":\"Método não permitido; use POST\"}");
+            sendResponse(exchange, HTTP_METHOD_NOT_ALLOWED, "{\"valid\":false,\"message\":\"Método não permitido; use POST\"}");
             return;
         }
         SignRequest request = gson.fromJson(readBody(exchange), SignRequest.class);
         SignatureResponse response = service.sign(request);
-        sendResponse(exchange, response.isValid() ? 200 : 422, gson.toJson(response));
+        sendResponse(exchange, response.isValid() ? HTTP_OK : HTTP_UNPROCESSABLE_ENTITY, gson.toJson(response));
     }
 
     private void handleValidate(HttpExchange exchange) throws IOException {
         lastActivityMs.set(System.currentTimeMillis());
         if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
-            sendResponse(exchange, 405, "{\"valid\":false,\"message\":\"Método não permitido; use POST\"}");
+            sendResponse(exchange, HTTP_METHOD_NOT_ALLOWED, "{\"valid\":false,\"message\":\"Método não permitido; use POST\"}");
             return;
         }
         ValidateRequest request = gson.fromJson(readBody(exchange), ValidateRequest.class);
         SignatureResponse response = service.validate(request);
-        sendResponse(exchange, response.isValid() ? 200 : 422, gson.toJson(response));
+        sendResponse(exchange, response.isValid() ? HTTP_OK : HTTP_UNPROCESSABLE_ENTITY, gson.toJson(response));
     }
 
     private void handleHealth(HttpExchange exchange) throws IOException {
         lastActivityMs.set(System.currentTimeMillis());
-        sendResponse(exchange, 200, "{\"status\":\"ok\"}");
+        sendResponse(exchange, HTTP_OK, "{\"status\":\"ok\"}");
     }
 
     private void handleShutdown(HttpExchange exchange) throws IOException {
         if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
-            sendResponse(exchange, 405, "{\"status\":\"error\",\"message\":\"Método não permitido; use POST\"}");
+            sendResponse(exchange, HTTP_METHOD_NOT_ALLOWED, "{\"status\":\"error\",\"message\":\"Método não permitido; use POST\"}");
             return;
         }
-        sendResponse(exchange, 200, "{\"status\":\"shutdown\"}");
+        sendResponse(exchange, HTTP_OK, "{\"status\":\"shutdown\"}");
         LOG.info("Shutdown solicitado via /shutdown.");
         new Thread(() -> {
             try { Thread.sleep(200); } catch (InterruptedException ignored) { Thread.currentThread().interrupt(); }
