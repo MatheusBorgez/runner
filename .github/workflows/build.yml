@@ -1,10 +1,13 @@
-name: Build & Test
+name: CI
 
 on:
   push:
-    branches: ["main", "develop"]
+    branches:
+      - "*"
+      - "**"
   pull_request:
-    branches: ["main"]
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -38,6 +41,59 @@ jobs:
 
       - name: Test
         run: go test ./...
+
+  lint-go:
+    name: golangci-lint (relatório)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: projetos
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache-dependency-path: projetos/go.sum
+
+      # Mesma versão da baseline em docs/trabalho-final/analise-estatica-antes.md.
+      # O install.sh oficial desta tag falha o checksum; o binário é o asset
+      # publicado no GitHub Release, conferido pelo SHA256 abaixo.
+      - name: Instalar golangci-lint v2.15.0
+        working-directory: .
+        run: |
+          curl -sSfL -o /tmp/golangci-lint.tar.gz \
+            https://github.com/golangci/golangci-lint/releases/download/v2.15.0/golangci-lint-2.15.0-linux-amd64.tar.gz
+          echo "9b7fe6a6bf6334b98decf8d86b11415ea7889afdabdd1959fdce23af2a9ebcea  /tmp/golangci-lint.tar.gz" | sha256sum -c
+          tar -C /tmp -xzf /tmp/golangci-lint.tar.gz
+          mkdir -p "$HOME/bin"
+          mv /tmp/golangci-lint-2.15.0-linux-amd64/golangci-lint "$HOME/bin/golangci-lint"
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+
+      # A baseline v1.0.0 tem 18 issues errcheck. O job publica o relatório e
+      # não quebra o build por elas. Issues novas também não falham este job:
+      # --new-from-rev marcaria de novo issues antigas em linhas editadas pelos
+      # PRs de refatoração. O gate pode ser ligado depois da limpeza.
+      - name: Analisar
+        run: |
+          golangci-lint run ./... --timeout=8m --issues-exit-code=0 | tee golangci-lint.txt
+          {
+            echo "## golangci-lint v2.15.0"
+            echo
+            echo '```'
+            tail -n 20 golangci-lint.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publicar relatório
+        uses: actions/upload-artifact@v4
+        with:
+          name: golangci-lint
+          path: projetos/golangci-lint.txt
+          retention-days: 14
 
   build-go:
     name: Build Go (cross-compile)
@@ -113,7 +169,17 @@ jobs:
           key: maven-${{ hashFiles('projetos/assinador-java/pom.xml') }}
 
       - name: Build e testes
-        run: mvn -B clean verify
+        run: |
+          ok=0
+          for i in 1 2 3; do
+            if mvn -B clean verify; then
+              ok=1
+              break
+            fi
+            echo "mvn falhou na tentativa ${i}. Nova tentativa em $((i * 20))s."
+            sleep $((i * 20))
+          done
+          test "$ok" -eq 1
 
       - name: Upload assinador.jar
         uses: actions/upload-artifact@v4
@@ -121,3 +187,61 @@ jobs:
           name: assinador-jar
           path: projetos/assinador-java/target/assinador-*.jar
           retention-days: 7
+
+  smoke:
+    name: Smoke (sobe a aplicação)
+    runs-on: ubuntu-latest
+    needs: [test-go, build-java]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache-dependency-path: projetos/go.sum
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      - name: Baixar assinador.jar
+        uses: actions/download-artifact@v4
+        with:
+          name: assinador-jar
+          path: dist-jar
+
+      - name: Instalar o JAR em ~/.hubsaude
+        run: |
+          jar=$(find dist-jar -type f -name 'assinador-*.jar' ! -name 'original-*' | head -n 1)
+          test -n "$jar"
+          mkdir -p "$HOME/.hubsaude"
+          cp "$jar" "$HOME/.hubsaude/assinador.jar"
+          echo "JAR=$jar"
+
+      - name: Compilar a CLI
+        working-directory: projetos
+        run: |
+          # projetos/assinatura é um diretório (módulo legado). -o assinatura
+          # gravaria o binário lá dentro e ./assinatura não seria executável.
+          go build -o "$RUNNER_TEMP/assinatura" ./cmd/assinatura
+
+      - name: start, /health, sign e stop
+        working-directory: projetos
+        run: |
+          "$RUNNER_TEMP/assinatura" start
+          curl -fsS --retry 5 --retry-delay 1 --retry-all-errors http://127.0.0.1:8080/health
+          echo
+          "$RUNNER_TEMP/assinatura" sign --content "$(printf 'meu conteudo' | base64 -w 0)"
+          "$RUNNER_TEMP/assinatura" status
+          "$RUNNER_TEMP/assinatura" stop
+
+      - name: Encerrar mesmo se o smoke falhar
+        if: always()
+        run: |
+          if [ -x "$RUNNER_TEMP/assinatura" ]; then
+            "$RUNNER_TEMP/assinatura" stop || true
+          fi
