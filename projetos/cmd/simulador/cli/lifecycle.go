@@ -184,13 +184,11 @@ func portOccupied(port int) bool {
 }
 
 func waitSimuladorReady(maxSeconds int) error {
-	for i := 0; i < maxSeconds; i++ {
-		if simuladorHealthy() {
-			return nil
-		}
-		time.Sleep(time.Second)
+	err := runtime.Poll(maxSeconds, time.Second, simuladorHealthy)
+	if err != nil {
+		return fmt.Errorf("simulador não ficou pronto após %d segundos", maxSeconds)
 	}
-	return fmt.Errorf("simulador não ficou pronto após %d segundos", maxSeconds)
+	return nil
 }
 
 func ensureSimuladorJar(sm *runtime.StateManager, source string) (string, error) {

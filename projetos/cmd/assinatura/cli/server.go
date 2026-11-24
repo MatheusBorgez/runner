@@ -166,11 +166,11 @@ func runStatus(cmd *cobra.Command, _ []string) error {
 }
 
 func waitReady(inv *invoker.Invoker, maxAttempts int) error {
-	for i := 0; i < maxAttempts; i++ {
-		if inv.Health() == nil {
-			return nil
-		}
-		time.Sleep(time.Second)
+	err := runtime.Poll(maxAttempts, time.Second, func() bool {
+		return inv.Health() == nil
+	})
+	if err != nil {
+		return fmt.Errorf("servidor não ficou pronto após %d tentativas", maxAttempts)
 	}
-	return fmt.Errorf("servidor não ficou pronto após %d tentativas", maxAttempts)
+	return nil
 }
