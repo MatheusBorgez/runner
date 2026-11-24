@@ -3,6 +3,7 @@ package jdk
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -26,6 +27,9 @@ func TestEnsurePrefersLocalJava(t *testing.T) {
 }
 
 func TestJava21OnPath(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("o java falso é um script sh, que não roda no Windows")
+	}
 	dir := t.TempDir()
 	java := filepath.Join(dir, "java")
 	script := "#!/bin/sh\nprintf '%s\\n' 'openjdk version \"21.0.1\"' >&2\n"
@@ -40,6 +44,9 @@ func TestJava21OnPath(t *testing.T) {
 }
 
 func TestJava21OnPathRejectsOtherVersion(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("o java falso é um script sh, que não roda no Windows")
+	}
 	dir := t.TempDir()
 	java := filepath.Join(dir, "java")
 	script := "#!/bin/sh\nprintf '%s\\n' 'openjdk version \"17.0.1\"' >&2\n"
