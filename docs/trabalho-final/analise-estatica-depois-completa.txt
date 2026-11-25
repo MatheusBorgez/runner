@@ -1,0 +1,65 @@
+cmd/simulador/cli/lifecycle.go:126:18: Error return value of `resp.Body.Close` is not checked (errcheck)
+		resp.Body.Close()
+		               ^
+cmd/simulador/cli/lifecycle.go:161:23: Error return value of `resp.Body.Close` is not checked (errcheck)
+	defer resp.Body.Close()
+	                     ^
+cmd/simulador/cli/lifecycle.go:173:17: Error return value of `resp.Body.Close` is not checked (errcheck)
+	resp.Body.Close()
+	               ^
+cmd/simulador/cli/lifecycle.go:180:18: Error return value of `conn.Body.Close` is not checked (errcheck)
+		conn.Body.Close()
+		               ^
+internal/invoker/invoker.go:73:23: Error return value of `resp.Body.Close` is not checked (errcheck)
+	defer resp.Body.Close()
+	                     ^
+internal/invoker/invoker.go:89:23: Error return value of `resp.Body.Close` is not checked (errcheck)
+	defer resp.Body.Close()
+	                     ^
+internal/invoker/invoker.go:129:23: Error return value of `resp.Body.Close` is not checked (errcheck)
+	defer resp.Body.Close()
+	                     ^
+internal/invoker/invoker_test.go:17:28: Error return value of `(*encoding/json.Encoder).Encode` is not checked (errcheck)
+		json.NewEncoder(w).Encode(map[string]any{
+		                         ^
+internal/invoker/invoker_test.go:38:28: Error return value of `(*encoding/json.Encoder).Encode` is not checked (errcheck)
+		json.NewEncoder(w).Encode(map[string]any{
+		                         ^
+internal/invoker/invoker_test.go:59:10: Error return value of `w.Write` is not checked (errcheck)
+		w.Write([]byte(`{"status":"ok"}`))
+		       ^
+internal/invoker/invoker_test.go:78:10: Error return value of `w.Write` is not checked (errcheck)
+		w.Write([]byte("not json"))
+		       ^
+internal/jdk/jdk.go:96:17: Error return value of `os.Remove` is not checked (errcheck)
+	defer os.Remove(archivePath)
+	               ^
+internal/jdk/jdk.go:128:23: Error return value of `resp.Body.Close` is not checked (errcheck)
+	defer resp.Body.Close()
+	                     ^
+internal/jdk/jdk.go:136:15: Error return value of `f.Close` is not checked (errcheck)
+	defer f.Close()
+	             ^
+internal/jdk/jdk.go:146:15: Error return value of `f.Close` is not checked (errcheck)
+	defer f.Close()
+	             ^
+internal/jdk/jdk.go:151:16: Error return value of `gz.Close` is not checked (errcheck)
+	defer gz.Close()
+	              ^
+internal/jdk/jdk.go:175:13: Error return value of `out.Close` is not checked (errcheck)
+			out.Close()
+			         ^
+internal/jdk/jdk.go:189:15: Error return value of `r.Close` is not checked (errcheck)
+	defer r.Close()
+	             ^
+internal/jdk/jdk.go:206:12: Error return value of `rc.Close` is not checked (errcheck)
+			rc.Close()
+			        ^
+internal/jdk/jdk.go:210:12: Error return value of `out.Close` is not checked (errcheck)
+		out.Close()
+		         ^
+internal/jdk/jdk.go:211:11: Error return value of `rc.Close` is not checked (errcheck)
+		rc.Close()
+		        ^
+21 issues:
+* errcheck: 21
