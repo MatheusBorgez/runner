@@ -2,12 +2,12 @@
 
 - Disciplina: Implantação e Entrega de Software – INF/UFG
 - Professora: Sofia Costa Paiva
-- Grupo: [NOMES DO GRUPO]
+- Grupo: Matheus Andrade Borges; Gustavo Marçal (GitHub: [gugualves2002](https://github.com/gugualves2002)) [A PREENCHER: demais integrantes, se houver]
 - Repositório: https://github.com/MatheusBorgez/runner
 - Baseline (etapa 1): tag `v1.0.0` no commit `8777756d20658998fd0574017b3e09ed9f7a6857`
-- Versão final (etapa 8): tag `v2.0.0` [A PREENCHER]
+- Versão final (etapa 8): tag `v2.0.0` (criada no `main` depois deste relatório; ver https://github.com/MatheusBorgez/runner/releases/tag/v2.0.0)
 
-Este texto é um rascunho. Onde aparecer `[A PREENCHER]` ou `[PRINT: ...]`, o grupo cola a evidência antes de entregar.
+Os trechos técnicos (PRs, pipeline, análise estática e justificativa de Continuous Delivery) já estão preenchidos. Onde aparecer `[A PREENCHER]` ou `[PRINT: ...]`, falta evidência que só o grupo tem (prints de tela, convites no GitHub, demais nomes se houver).
 
 ## 1. Visão do projeto
 
@@ -143,7 +143,7 @@ Isso cobre commit em branch e cada PR para `main`.
 
 O job de lint não usa `--new-from-rev`. Esse filtro reapareceria issues antigas em qualquer linha que um PR de refatoração tocasse, e o build ficaria vermelho sem código novo defeituoso. O relatório continua sendo gerado em todo push e em todo PR. Depois que a contagem cair, o grupo pode tirar `--issues-exit-code=0` e passar a falhar o job.
 
-`.github/workflows/ci.yml` foi removido nesta branch. Ele só rodava manualmente, compilava o módulo morto `projetos/assinatura` com Go 1.25 e ainda podia publicar release. A pipeline da disciplina é o `build.yml`. A publicação de versão continua em `.github/workflows/release.yml`, no push de uma tag `v*`.
+`.github/workflows/ci.yml` foi removido em `main` (PRs #1 e #3). Ele só rodava manualmente, compilava o módulo morto `projetos/assinatura` com Go 1.25 e ainda podia publicar release. A pipeline da disciplina é o `build.yml`. A publicação de versão continua em `.github/workflows/release.yml`, no push de uma tag `v*`.
 
 ```text
 push ou pull_request
@@ -156,7 +156,7 @@ push ou pull_request
                                       start → GET /health → sign → stop
 ```
 
-Verificação nesta branch, antes do PR: o run https://github.com/MatheusBorgez/runner/actions/runs/45511643280 concluiu com sucesso (testes Go nos três sistemas, Java, golangci-lint, cross-compile e smoke). Um run anterior, https://github.com/MatheusBorgez/runner/actions/runs/45511315146, falhou só no smoke: `go build -o assinatura` gravou o binário dentro do diretório `projetos/assinatura`. O commit seguinte gera o binário em `RUNNER_TEMP`. Enquanto este workflow não estiver em `main`, a lista de Actions ainda mostra o nome antigo **Build & Test**; o arquivo já se chama `CI`.
+O workflow entrou em `main` pelo [PR #3](https://github.com/MatheusBorgez/runner/pull/3) (CI verde: https://github.com/MatheusBorgez/runner/actions/runs/45512148806). A verificação na branch, antes desse PR, foi o run https://github.com/MatheusBorgez/runner/actions/runs/45511643280 (testes Go nos três sistemas, Java, golangci-lint, cross-compile e smoke). Um run anterior, https://github.com/MatheusBorgez/runner/actions/runs/45511315146, falhou só no smoke: `go build -o assinatura` gravou o binário dentro do diretório `projetos/assinatura`. O commit seguinte gera o binário em `RUNNER_TEMP`. Depois do merge das refatorações, o `CI` em `main` (merge do PR #7) também passou: https://github.com/MatheusBorgez/runner/actions/runs/45514491365.
 
 [PRINT: grafo dos jobs na aba Actions, com `smoke` verde]
 
@@ -172,58 +172,69 @@ Não se usa **implantação contínua** (deploy automático em produção a cada
 
 ## 6. Passos 5 e 6 — Refatorações em PRs, com a pipeline em cada um
 
-As refatorações **não foram feitas** nesta branch. O roteiro, com técnica, arquivos, comandos e título de PR, está em [REFATORACOES.md](REFATORACOES.md). São seis PRs, em arquivos disjuntos, para duas pessoas trabalharem em paralelo:
+As seis refatorações de código e o PR da pipeline já foram mergeados em `main`. O detalhe de cada técnica está em [REFATORACOES.md](REFATORACOES.md). A numeração abaixo é a do GitHub (o roteiro original tinha outra ordem: a 3 do roteiro é o PR #6, a 4 é o PR #7, a 5 é o PR #4 e a 6 é o PR #5).
 
-1. Remove Dead Code — `projetos/assinatura/`
-2. Replace Nested Conditional with Guard Clauses — `invoker.go`
-3. Replace Magic Number with Symbolic Constant — `SignatureServer.java`
-4. Extract Function — `release.go`
-5. Decompose Conditional — `jdk.Ensure`
-6. Extract Function — espera compartilhada (`runtime.Poll`)
+Cada PR de refatoração correu com o workflow `CI` nos checks. O PR #1 foi aberto e mergeado antes do PR #3 entrar em `main`; ainda assim os jobs de teste e build do `build.yml` rodaram no PR. A partir do PR #2, o `CI` completo (incluindo lint e, quando a branch já tinha o workflow, smoke) aparece nos checks.
 
-Cada PR deve usar a branch da pipeline já mergeada em `main`, para o workflow `CI` aparecer nos checks.
+| PR | Técnica | Autor | URL | CI (run do PR, verde) |
+|---|---|---|---|---|
+| [#1](https://github.com/MatheusBorgez/runner/pull/1) | Remove Dead Code | Matheus Andrade Borges | https://github.com/MatheusBorgez/runner/pull/1 | https://github.com/MatheusBorgez/runner/actions/runs/45511730481 |
+| [#2](https://github.com/MatheusBorgez/runner/pull/2) | Replace Nested Conditional with Guard Clauses | Gustavo Marçal ([gugualves2002](https://github.com/gugualves2002)) | https://github.com/MatheusBorgez/runner/pull/2 | https://github.com/MatheusBorgez/runner/actions/runs/45512022977 |
+| [#3](https://github.com/MatheusBorgez/runner/pull/3) | Pipeline CI/CD + docs da baseline (não é refatoração de código) | Matheus Andrade Borges | https://github.com/MatheusBorgez/runner/pull/3 | https://github.com/MatheusBorgez/runner/actions/runs/45512148806 |
+| [#4](https://github.com/MatheusBorgez/runner/pull/4) | Decompose Conditional (`jdk.Ensure`) | Matheus Andrade Borges | https://github.com/MatheusBorgez/runner/pull/4 | https://github.com/MatheusBorgez/runner/actions/runs/45513981877 |
+| [#5](https://github.com/MatheusBorgez/runner/pull/5) | Extract Function (`runtime.Poll`) | Matheus Andrade Borges | https://github.com/MatheusBorgez/runner/pull/5 | https://github.com/MatheusBorgez/runner/actions/runs/45512814268 |
+| [#6](https://github.com/MatheusBorgez/runner/pull/6) | Replace Magic Number with Symbolic Constant | Gustavo Marçal ([gugualves2002](https://github.com/gugualves2002)) | https://github.com/MatheusBorgez/runner/pull/6 | https://github.com/MatheusBorgez/runner/actions/runs/45513005917 |
+| [#7](https://github.com/MatheusBorgez/runner/pull/7) | Extract Function (`closeQuietly` em `release.go`) | Gustavo Marçal ([gugualves2002](https://github.com/gugualves2002)) | https://github.com/MatheusBorgez/runner/pull/7 | https://github.com/MatheusBorgez/runner/actions/runs/45513011008 |
 
-| PR | Técnica | URL | CI |
-|---|---|---|---|
-| [A PREENCHER] | Remove Dead Code | [A PREENCHER] | [A PREENCHER] |
-| [A PREENCHER] | Replace Nested Conditional with Guard Clauses | [A PREENCHER] | [A PREENCHER] |
-| [A PREENCHER] | Replace Magic Number with Symbolic Constant | [A PREENCHER] | [A PREENCHER] |
-| [A PREENCHER] | Extract Function (`release.go`) | [A PREENCHER] | [A PREENCHER] |
-| [A PREENCHER] | Decompose Conditional | [A PREENCHER] | [A PREENCHER] |
-| [A PREENCHER] | Extract Function (`Poll`) | [A PREENCHER] | [A PREENCHER] |
+O [PR #4](https://github.com/MatheusBorgez/runner/pull/4) teve uma execução vermelha no Windows (https://github.com/MatheusBorgez/runner/actions/runs/45512808359): os testes de `java21OnPath` usavam um script `sh` como `java` falso, o que não roda naquele SO. O commit seguinte pula esses testes no Windows. A execução seguinte ficou verde e o PR foi mergeado.
 
-[PRINT: aba Checks de cada PR, com o workflow `CI` verde, inclusive o job `smoke`]
+[PRINT: aba Checks de cada PR, com o workflow `CI` verde, inclusive o job `smoke` quando ele fizer parte do workflow daquele PR]
 
 ## 7. Passo 7 — Análise estática outra vez
 
-Rodar de novo, no `main` já com as refatorações mergeadas, **a mesma versão e o mesmo comando** da etapa 3:
+Foi rodado de novo, no `main` já com as refatorações mergeadas (commit `78db1b0cc2b9145b370f64d3db7a4054bb748f53`, merge do PR #7), **a mesma versão e o mesmo comando** da etapa 3:
 
 ```bash
 cd projetos
-golangci-lint version   # tem que ser 2.15.0
-golangci-lint run ./... --timeout 10m | tee docs/trabalho-final/analise-estatica-depois.txt
+golangci-lint version   # 2.15.0
+golangci-lint run ./... --timeout 10m
 ```
 
-| Métrica | Baseline `v1.0.0` | Depois | Variação |
-|---|---|---|---|
-| errcheck | 18 | [A PREENCHER] | [A PREENCHER] |
-| govet | 0 | [A PREENCHER] | [A PREENCHER] |
-| ineffassign | 0 | [A PREENCHER] | [A PREENCHER] |
-| staticcheck | 0 | [A PREENCHER] | [A PREENCHER] |
-| unused | 0 | [A PREENCHER] | [A PREENCHER] |
-| Total | 18 | [A PREENCHER] | [A PREENCHER] |
+Saída bruta: [analise-estatica-depois.txt](analise-estatica-depois.txt). Resumo: [analise-estatica-depois.md](analise-estatica-depois.md). Neste mesmo commit, `go vet ./...` e `go test ./... -count=1` passaram (código de saída 0).
 
-A refatoração 4, se feita como está no roteiro, deve eliminar as 4 issues de `release.go`. As outras refatorações não foram desenhadas para zerar `jdk.go` nem os testes do invoker. O texto da comparação precisa dizer o que melhorou e o que ficou (PKCS#11 simulado, `errcheck` do JDK, instaladores antigos).
+O comando padrão do golangci-lint limita issues com o mesmo texto a 3 (`--max-same-issues=3`). A baseline original e a reexecução “oficial” portanto mostram 18 e 17 issues, mas escondem apontamentos repetidos de `Close`. A comparação justa, com `--max-same-issues=0` no mesmo binário 2.15.0, está em [analise-estatica-antes-completa.txt](analise-estatica-antes-completa.txt) e [analise-estatica-depois-completa.txt](analise-estatica-depois-completa.txt).
 
-[A PREENCHER: parágrafo da comparação]
+| Métrica | Baseline `v1.0.0` (comando padrão) | Depois (comando padrão) | Baseline completa | Depois completa | Variação real |
+|---|---:|---:|---:|---:|---:|
+| errcheck | 18 | 17 | 25 | 21 | −4 |
+| govet | 0 | 0 | 0 | 0 | 0 |
+| ineffassign | 0 | 0 | 0 | 0 | 0 |
+| staticcheck | 0 | 0 | 0 | 0 | 0 |
+| unused | 0 | 0 | 0 | 0 | 0 |
+| **Total** | **18** | **17** | **25** | **21** | **−4** |
 
-[PRINT: as duas saídas lado a lado, ou uma tabela preenchida]
+Por arquivo, na contagem completa:
+
+| Arquivo | Antes | Depois | Variação |
+|---|---:|---:|---:|
+| `internal/jdk/jdk.go` | 10 | 10 | 0 |
+| `internal/release/release.go` | 4 | 0 | −4 |
+| `internal/invoker/invoker_test.go` | 4 | 4 | 0 |
+| `cmd/simulador/cli/lifecycle.go` | 4 | 4 | 0 |
+| `internal/invoker/invoker.go` | 3 | 3 | 0 |
+| **Total** | **25** | **21** | **−4** |
+
+A queda inteira vem do [PR #7](https://github.com/MatheusBorgez/runner/pull/7): as 4 issues `errcheck` de `release.go` saíram (`closeQuietly` nos `Close` de leitura e tratamento do `Close` do arquivo gravado). Os totais dos outros arquivos não mudaram. O que a saída padrão “ganha” em `jdk.go` e `invoker.go` depois da refatoração não é issue nova: é apontamento que já existia na `v1.0.0` e que o teto de 3 ocorrências iguais escondia.
+
+O que ficou de propósito: os `errcheck` da extração do JDK e dos `Close` em `invoker.go`, `invoker_test.go` e `lifecycle.go`; o PKCS#11 de fachada em `Pkcs11SignatureService.java` (sem HSM no CI); e os instaladores / `release.json` do fluxo antigo do HubSaúde. Isso não entra no golangci-lint do módulo Go.
+
+[PRINT: as duas saídas lado a lado, ou uma tabela preenchida — os arquivos `.txt` e a tabela acima já registram os números]
 
 [PRINT: gráfico de barras antes/depois, se o grupo fizer]
 
 ## 8. Passo 8 — Tag 2.0.0
 
-Criar a tag **só depois** que os PRs de refatoração estiverem mergeados em `main` e a comparação da etapa 7 estiver salva. Não criar esta tag a partir da branch da pipeline.
+A tag anotada `v2.0.0` é criada no `main` **depois** que os PRs de refatoração (#1, #2, #4, #5, #6 e #7), o PR da pipeline (#3) e o PR com esta comparação e este relatório estiverem mergeados.
 
 ```bash
 git checkout main
@@ -232,7 +243,10 @@ git tag -a v2.0.0 -m "Release 2.0.0 — após refatorações e pipeline CI/CD do
 git push origin v2.0.0
 ```
 
-O `release.yml` publica a Release `v2.0.0` (binários, JAR, checksums, Cosign). Conferir o Actions e a página da Release.
+O `release.yml` publica a Release `v2.0.0` (binários, JAR, checksums, Cosign). A página da Release e o run do Actions ficam em:
+
+- Tag e Release: https://github.com/MatheusBorgez/runner/releases/tag/v2.0.0
+- SHA do commit da tag: o commit de `main` que contém este relatório e a análise de depois (ver a página da tag)
 
 [PRINT: tag `v2.0.0`]
 
@@ -240,11 +254,13 @@ O `release.yml` publica a Release `v2.0.0` (binários, JAR, checksums, Cosign). 
 
 [PRINT: Actions do `release.yml` verde nessa tag]
 
-SHA do commit da tag: [A PREENCHER]
-
 ## 9. Conclusão
 
-[A PREENCHER: o que a baseline mostrou, o que a pipeline passa a garantir em todo PR, e o que o grupo escolheu não refatorar]
+A baseline na tag `v1.0.0` (commit `8777756`) mostrou, no comando padrão do golangci-lint 2.15.0, 18 issues `errcheck`. Com o teto de issues repetidas desligado, eram 25, concentradas em `jdk.go`, `release.go`, testes do invoker, `invoker.go` e `lifecycle.go`. A leitura de código apontou ainda o módulo morto `projetos/assinatura/`, o panic em `runLocal` quando o `java` não existia, números mágicos de status HTTP no assinador Java, o condicional carregado de `jdk.Ensure`, a espera de prontidão duplicada e o PKCS#11 apenas simulado.
+
+A pipeline `CI` (PR #3) passa a rodar em todo push de branch e em todo PR para `main`: testes Go nos três sistemas, `go vet`, golangci-lint (relatório, sem quebrar o build pelas issues já conhecidas), build Java, cross-compile e smoke test (`assinatura start`, `/health`, `sign`, `stop`). A publicação de versão continua sendo uma **entrega contínua** disparada por tag `v*`, não uma implantação contínua em produção: o produto é uma CLI com servidor local, e a versão instalável é a GitHub Release da tag.
+
+As seis refatorações entraram em PRs separados, cada um nomeando a técnica de Fowler, com CI verde antes do merge. A reexecução do linter no `main` depois desses PRs mostra 21 issues na contagem completa (25 → 21, −4), todas as 4 saídas em `release.go`. O restante da dívida listada acima foi deixado de propósito: zerar `errcheck` em `jdk.go` ou implementar PKCS#11 de verdade sairia do recorte de PRs pequenos e, no segundo caso, exigiria HSM no CI.
 
 ## Referências
 

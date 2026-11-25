@@ -72,3 +72,5 @@ O processo terminou com código de saída 1, porque havia issues. Nenhum erro de
 Há outros `Close`/`Remove` com `//nolint:errcheck` (por exemplo em `cmd/assinatura/cli/server.go`). O linter não os conta. Eles continuam sendo dívida da leitura de código, não desta tabela.
 
 O defeito de ponteiro nulo em `internal/invoker/invoker.go` (por volta das linhas 104–110) também não aparece nesta baseline: `staticcheck` e `govet` não o apontaram. Ele fica registrado na leitura de código e na refatoração 2.
+
+A reexecução da etapa 7 mostrou que o comando padrão esconde issues repetidas (`--max-same-issues=3`). Os 18 apontamentos acima são a saída oficial desta baseline e não foram alterados. A lista completa no mesmo commit, com o teto desligado, está em [analise-estatica-antes-completa.txt](analise-estatica-antes-completa.txt) (25 issues `errcheck`) e é usada na comparação da [análise de depois](analise-estatica-depois.md).
